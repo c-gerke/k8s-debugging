@@ -7,10 +7,13 @@ A collection of purpose-built container images and Kubernetes manifests for debu
 ```
 k8s-debug-pods/
 ├── images/              # Container image definitions
-│   └── network-debug/   # Network debugging tools
+│   ├── network-debug/   # Network debugging tools
+│   │   └── Dockerfile
+│   └── python-debug/    # Python debugging tools
 │       └── Dockerfile
 ├── pods/                # Kubernetes pod manifests
-│   └── network-debug.yml
+│   ├── network-debug.yml
+│   └── python-debug.yml
 ├── bin/                 # Deployment helper scripts
 │   ├── deploy-debug-pod
 │   └── cleanup-debug-pods
@@ -49,6 +52,52 @@ Or apply the pod manifest directly:
 ```bash
 kubectl apply -f pods/network-debug.yml
 kubectl exec -it network-debug-pod -- /bin/bash
+```
+
+### python-debug
+
+Python debugging and development tools for running Python scripts and troubleshooting Python applications.
+
+**Image:** `ghcr.io/c-gerke/k8s-debug-pods/python-debug:latest`
+
+**Installed Tools:**
+- `python3` (3.11.2) - Python interpreter
+- `pip3` - Python package installer
+- `python3-venv` - Virtual environment support
+- `curl` - HTTP client
+- `wget` - File downloader
+- `vim` - Text editor
+- `jq` - JSON processor
+- `procps` - Process utilities (ps, top)
+
+**Usage:**
+```bash
+kubectl run python-debug --rm -it \
+  --image=ghcr.io/c-gerke/k8s-debug-pods/python-debug:latest \
+  --restart=Never \
+  -- /bin/bash
+```
+
+Or apply the pod manifest directly:
+```bash
+kubectl apply -f pods/python-debug.yml
+kubectl exec -it python-debug-pod -- /bin/bash
+```
+
+Once inside the pod, you can run Python tools:
+```bash
+# Run Python scripts
+python3 script.py
+
+# Install additional packages
+pip3 install requests
+
+# Create and use virtual environments
+python3 -m venv myenv
+source myenv/bin/activate
+
+# Run interactive Python
+python3
 ```
 
 ### Deployment Scripts
