@@ -1,11 +1,11 @@
-# k8s-debugging
+# Kubernetes debugging pods
 
 A collection of purpose-built container images and Kubernetes manifests for debugging and troubleshooting applications running in Kubernetes clusters.
 
 ## Repository Structure
 
 ```
-k8s-debugging/
+k8s-debug-pods/
 ├── images/              # Container image definitions
 │   └── network-debug/   # Network debugging tools
 │       └── Dockerfile
@@ -22,7 +22,7 @@ k8s-debugging/
 
 Network troubleshooting tools for diagnosing connectivity issues.
 
-**Image:** `ghcr.io/c-gerke/k8s-debugging/network-debug:latest`
+**Image:** `ghcr.io/c-gerke/k8s-debug-pods/network-debug:latest`
 
 **Installed Tools:**
 - `curl` - HTTP client
@@ -37,7 +37,7 @@ Network troubleshooting tools for diagnosing connectivity issues.
 **Usage:**
 ```bash
 kubectl run network-debug --rm -it \
-  --image=ghcr.io/c-gerke/k8s-debugging/network-debug:latest \
+  --image=ghcr.io/c-gerke/k8s-debug-pods/network-debug:latest \
   --restart=Never \
   -- /bin/bash
 ```
@@ -75,7 +75,7 @@ kubectl exec -it ubuntu-debug-pod -- /bin/bash
 
 5. GitHub Actions will automatically build and push the image to:
    ```
-   ghcr.io/c-gerke/k8s-debugging/my-new-debugger:latest
+   ghcr.io/c-gerke/k8s-debug-pods/my-new-debugger:latest
    ```
 
 ## CI/CD Pipeline

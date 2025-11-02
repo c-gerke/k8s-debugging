@@ -13,7 +13,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/k8s-debugging
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/k8s-debug-pods
 
 jobs:
   find-changed-images:

@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
   - name: network-tools-container
-    image: ghcr.io/c-gerke/k8s-debugging/network-debug:latest
+    image: ghcr.io/c-gerke/k8s-debug-pods/network-debug:latest
     command: ['sleep', '3600']
     resources:
       requests:
