@@ -30,7 +30,7 @@ Tests all network troubleshooting tools:
 - `nc` (netcat) - Network utility
 - `telnet` - TCP connection testing
 
-### postgresql-debug-13, postgresql-debug-14, postgresql-debug-15
+### postgresql-debug-13, postgresql-debug-14, postgresql-15
 
 Tests PostgreSQL client tools and verifies correct version:
 
@@ -43,9 +43,9 @@ Tests PostgreSQL client tools and verifies correct version:
 - `curl` - HTTP client
 - `wget` - File downloader
 
-**Version Verification:** Tests ensure the correct major version is installed (e.g., postgresql-debug-15 must have PostgreSQL 15.x)
+**Version Verification:** Tests ensure the correct major version is installed (e.g., postgresql-15 must have PostgreSQL 15.x)
 
-### ruby-debug-3.3, ruby-debug-3.4
+### ruby-debug-3.3, ruby-3.4
 
 Tests Ruby development tools and verifies correct version:
 
@@ -59,9 +59,9 @@ Tests Ruby development tools and verifies correct version:
 - `vim` - Text editor
 - `gcc` - C compiler (for native gem extensions)
 
-**Version Verification:** Tests ensure the correct major.minor version is installed (e.g., ruby-debug-3.4 must have Ruby 3.4.x)
+**Version Verification:** Tests ensure the correct major.minor version is installed (e.g., ruby-3.4 must have Ruby 3.4.x)
 
-### mysql-debug-8.0, mysql-debug-8.4
+### mysql-debug-8.0, mysql-8.4
 
 Tests MySQL client tools and verifies correct version:
 
@@ -71,7 +71,7 @@ Tests MySQL client tools and verifies correct version:
 - `curl` - HTTP client
 - `wget` - File downloader
 
-**Version Verification:** Tests ensure the correct major.minor version is installed (e.g., mysql-debug-8.0 must have MySQL 8.0.x)
+**Version Verification:** Tests ensure the correct major.minor version is installed (e.g., mysql-8.0 must have MySQL 8.0.x)
 
 ## Adding Tests for New Images
 

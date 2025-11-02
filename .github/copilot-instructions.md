@@ -1,4 +1,4 @@
-# Copilot Instructions for k8s-debug-pods
+# Copilot Instructions for k8s-pods
 
 ## Repository Purpose
 
@@ -9,7 +9,7 @@ This repository maintains purpose-built container images and Kubernetes pod mani
 ### Image Structure
 - **Base image**: Always use `debian:bookworm-slim` for consistency and small footprint
 - **Organization**: Each debugging tool set lives in `images/<purpose>/Dockerfile`
-- **Registry**: All images push to `ghcr.io/c-gerke/k8s-debug-pods/<purpose>:latest`
+- **Registry**: All images push to `ghcr.io/c-gerke/k8s-pods/<purpose>:latest`
 - **Platform**: Build for `linux/amd64` only (no arm64)
 
 ### Dockerfile Best Practices
@@ -84,15 +84,15 @@ Every image is tested before being pushed to the registry to ensure quality and 
 curl --version, wget --version, dig -v, nslookup, ping -V,
 netstat --version, ss --version, ip -V, nc, telnet
 
-# postgresql-debug-13/14/15: Test PostgreSQL tools + version verification
+# postgresql-13/14/15: Test PostgreSQL tools + version verification
 psql --version (verify 13.x/14.x/15.x), pg_dump, pg_restore,
 pg_isready, createdb, dropdb, curl, wget
 
-# ruby-debug-3.3/3.4: Test Ruby tools + version verification
+# ruby-3.3/3.4: Test Ruby tools + version verification
 ruby --version (verify 3.3.x/3.4.x), irb, gem, bundle,
 git, curl, wget, vim, gcc (for native gems)
 
-# mysql-debug-8.0/8.4: Test MySQL tools + version verification
+# mysql-8.0/8.4: Test MySQL tools + version verification
 mysql --version (verify 8.0.x/8.4.x), mysqldump, mysqladmin, curl, wget
 ```
 
@@ -171,14 +171,14 @@ Example structure:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: descriptive-debug-pod
+  name: descriptive-pod
   labels:
     app: debug-pod
     type: network-debug
 spec:
   containers:
   - name: debug-container
-    image: ghcr.io/c-gerke/k8s-debug-pods/<purpose>:latest
+    image: ghcr.io/c-gerke/k8s-pods/<purpose>:latest
     command: ['sleep', '3600']
     resources:
       requests:
@@ -198,7 +198,7 @@ spec:
 - Script steps up in 64Mi increments and reserves 20% of quota for other pods
 
 The deployment script uses `yq` to dynamically modify:
-- Pod name (based on --name flag or defaults to `<type>-debug-pod`)
+- Pod name (based on --name flag or defaults to `<type>-pod`)
 - Resource requests/limits (memory and ephemeral-storage only)
 
 All other configurations (volumes, commands, env vars, security context, etc.) are preserved from the template.
@@ -253,28 +253,28 @@ The `bin/` directory contains helper scripts for deploying debug pods with intel
 - `kubectl` configured with cluster access
 - `yq` YAML processor (install: `brew install yq` on macOS)
 
-### deploy-debug-pod
+### deploy-pod
 
 Deploys a debug pod using a template from `pods/<type>.yml`:
 
 ```bash
 # Deploy with context/namespace
-./bin/deploy-debug-pod -c <context> -n <namespace> <pod-type>
+./bin/deploy-pod -c <context> -n <namespace> <pod-type>
 
 # Deploy to current context/namespace
-./bin/deploy-debug-pod <pod-type>
+./bin/deploy-pod <pod-type>
 
 # Deploy and exec in one command
-./bin/deploy-debug-pod --auto <pod-type>
+./bin/deploy-pod --auto <pod-type>
 
 # Override resources
-./bin/deploy-debug-pod -m 512Mi -e 512Mi <pod-type>
+./bin/deploy-pod -m 512Mi -e 512Mi <pod-type>
 
 # Custom pod name
-./bin/deploy-debug-pod --name my-debug <pod-type>
+./bin/deploy-pod --name my-debug <pod-type>
 
 # List available pod types
-./bin/deploy-debug-pod --list-images
+./bin/deploy-pod --list-images
 ```
 
 **How it works**:
@@ -293,22 +293,22 @@ Deploys a debug pod using a template from `pods/<type>.yml`:
 6. Creates pod in cluster (if needed)
 7. Preserves all other template configurations (volumes, env, etc.)
 
-### cleanup-debug-pods
+### cleanup-pods
 
 Manages cleanup of deployed debug pods:
 
 ```bash
 # List debug pods in namespace
-./bin/cleanup-debug-pods -n <namespace>
+./bin/cleanup-pods -n <namespace>
 
 # Delete all debug pods (with confirmation)
-./bin/cleanup-debug-pods -n <namespace> --all
+./bin/cleanup-pods -n <namespace> --all
 
 # Delete specific pod
-./bin/cleanup-debug-pods --name network-debug-pod
+./bin/cleanup-debug-pods --name network-pod
 
 # Dry run
-./bin/cleanup-debug-pods -n <namespace> --all --dry-run
+./bin/cleanup-pods -n <namespace> --all --dry-run
 ```
 
 Targets pods with label `app=debug-pod` (automatically added by deployment script).
@@ -329,7 +329,7 @@ dive <purpose>:local
 dive --ci <purpose>:local
 
 # Pull from registry (force amd64 on ARM Macs)
-docker pull --platform linux/amd64 ghcr.io/c-gerke/k8s-debug-pods/<purpose>:latest
+docker pull --platform linux/amd64 ghcr.io/c-gerke/k8s-pods/<purpose>:latest
 ```
 
 ### GitHub Actions
@@ -351,7 +351,7 @@ gh run watch
 ```bash
 # Quick ephemeral pod
 kubectl run <name> --rm -it \
-  --image=ghcr.io/c-gerke/k8s-debug-pods/<purpose>:latest \
+  --image=ghcr.io/c-gerke/k8s-pods/<purpose>:latest \
   --restart=Never \
   -- /bin/bash
 
@@ -387,12 +387,12 @@ kubectl delete pod <pod-name>
 
 ## Image Naming Convention
 
-Format: `ghcr.io/c-gerke/k8s-debug-pods/<purpose>:latest`
+Format: `ghcr.io/c-gerke/k8s-pods/<purpose>:latest`
 
 Examples:
-- `ghcr.io/c-gerke/k8s-debug-pods/network-debug:latest`
-- `ghcr.io/c-gerke/k8s-debug-pods/system-debug:latest`
-- `ghcr.io/c-gerke/k8s-debug-pods/db-debug:latest`
+- `ghcr.io/c-gerke/k8s-pods/network-debug:latest`
+- `ghcr.io/c-gerke/k8s-pods/system-debug:latest`
+- `ghcr.io/c-gerke/k8s-pods/db-debug:latest`
 
 Keep names:
 - Lowercase with hyphens
