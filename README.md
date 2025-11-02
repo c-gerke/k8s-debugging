@@ -6,32 +6,32 @@ A collection of purpose-built container images and Kubernetes manifests for debu
 
 ```
 k8s-debug-pods/
-├── images/                  # Container image definitions
-│   ├── network-debug/       # Network debugging tools
+├── images/                     # Container image definitions
+│   ├── network-debug/          # Network debugging tools
 │   │   └── Dockerfile
-│   └── postgresql-debug/    # PostgreSQL debugging tools
+│   ├── postgresql-debug-13/    # PostgreSQL 13 client tools
+│   │   └── Dockerfile
+│   ├── postgresql-debug-14/    # PostgreSQL 14 client tools
+│   │   └── Dockerfile
+│   ├── postgresql-debug-15/    # PostgreSQL 15 client tools
+│   │   └── Dockerfile
+│   ├── ruby-debug-3.3/         # Ruby 3.3.x development tools
+│   │   └── Dockerfile
+│   └── ruby-debug-3.4/         # Ruby 3.4.x development tools
 │       └── Dockerfile
-├── pods/                    # Kubernetes pod manifests
+├── pods/                       # Kubernetes pod manifests
 │   ├── network-debug.yml
-│   └── postgresql-debug.yml
-├── bin/                     # Deployment helper scripts
-├── images/              # Container image definitions
-│   ├── network-debug/   # Network debugging tools
-│   │   └── Dockerfile
-│   ├── ruby-debug-3.3/  # Ruby 3.3.x development tools
-│   │   └── Dockerfile
-│   └── ruby-debug-3.4/  # Ruby 3.4.x development tools
-│       └── Dockerfile
-├── pods/                # Kubernetes pod manifests
-│   ├── network-debug.yml
+│   ├── postgresql-debug-13.yml
+│   ├── postgresql-debug-14.yml
+│   ├── postgresql-debug-15.yml
 │   ├── ruby-debug-3.3.yml
 │   └── ruby-debug-3.4.yml
-├── bin/                 # Deployment helper scripts
+├── bin/                        # Deployment helper scripts
 │   ├── deploy-debug-pod
 │   └── cleanup-debug-pods
 ├── .github/
-│   └── workflows/           # CI/CD automation
-└── renovate.json            # Automated dependency updates
+│   └── workflows/              # CI/CD automation
+└── renovate.json               # Automated dependency updates
 ```
 
 ## Available Images
@@ -66,14 +66,23 @@ kubectl apply -f pods/network-debug.yml
 kubectl exec -it network-debug-pod -- /bin/bash
 ```
 
+Or using the deployment script:
+```bash
+./bin/deploy-debug-pod --auto network-debug
+```
+
 ### postgresql-debug
 
-PostgreSQL database debugging and development tools for database administration and troubleshooting.
+PostgreSQL database debugging and development tools for database administration and troubleshooting. Available in multiple PostgreSQL versions.
 
-**Image:** `ghcr.io/c-gerke/k8s-debug-pods/postgresql-debug:latest`
+#### postgresql-debug-13
+
+**Image:** `ghcr.io/c-gerke/k8s-debug-pods/postgresql-debug-13:latest`
+
+**PostgreSQL Version:** 13.16
 
 **Installed Tools:**
-- `psql` - PostgreSQL interactive terminal
+- `psql` - PostgreSQL interactive terminal (13.16)
 - `pg_dump` - PostgreSQL database backup utility
 - `pg_restore` - PostgreSQL database restoration utility
 - `pg_isready` - Check PostgreSQL server availability
@@ -84,8 +93,108 @@ PostgreSQL database debugging and development tools for database administration 
 
 **Usage:**
 ```bash
-kubectl run postgresql-debug --rm -it \
-  --image=ghcr.io/c-gerke/k8s-debug-pods/postgresql-debug:latest \
+kubectl run postgresql-debug-13 --rm -it \
+  --image=ghcr.io/c-gerke/k8s-debug-pods/postgresql-debug-13:latest \
+  --restart=Never \
+  -- /bin/bash
+```
+
+Or apply the pod manifest directly:
+```bash
+kubectl apply -f pods/postgresql-debug-13.yml
+kubectl exec -it postgresql-debug-13-pod -- /bin/bash
+```
+
+Or using the deployment script:
+```bash
+./bin/deploy-debug-pod --auto postgresql-debug-13
+```
+
+Example connection to a PostgreSQL database:
+```bash
+# Inside the debug pod
+psql -h postgres-service.default.svc.cluster.local -U myuser -d mydb
+
+# Check if PostgreSQL is ready
+pg_isready -h postgres-service.default.svc.cluster.local -p 5432
+
+# Dump a database
+pg_dump -h postgres-service.default.svc.cluster.local -U myuser mydb > backup.sql
+
+# Restore a database
+pg_restore -h postgres-service.default.svc.cluster.local -U myuser -d mydb backup.sql
+```
+
+#### postgresql-debug-14
+
+**Image:** `ghcr.io/c-gerke/k8s-debug-pods/postgresql-debug-14:latest`
+
+**PostgreSQL Version:** 14.13
+
+**Installed Tools:**
+- `psql` - PostgreSQL interactive terminal (14.13)
+- `pg_dump` - PostgreSQL database backup utility
+- `pg_restore` - PostgreSQL database restoration utility
+- `pg_isready` - Check PostgreSQL server availability
+- `createdb` - Create a PostgreSQL database
+- `dropdb` - Remove a PostgreSQL database
+- `curl` - HTTP client
+- `wget` - File downloader
+
+**Usage:**
+```bash
+kubectl run postgresql-debug-14 --rm -it \
+  --image=ghcr.io/c-gerke/k8s-debug-pods/postgresql-debug-14:latest \
+  --restart=Never \
+  -- /bin/bash
+```
+
+Or apply the pod manifest directly:
+```bash
+kubectl apply -f pods/postgresql-debug-14.yml
+kubectl exec -it postgresql-debug-14-pod -- /bin/bash
+```
+
+Or using the deployment script:
+```bash
+./bin/deploy-debug-pod --auto postgresql-debug-14
+```
+
+#### postgresql-debug-15
+
+**Image:** `ghcr.io/c-gerke/k8s-debug-pods/postgresql-debug-15:latest`
+
+**PostgreSQL Version:** 15.14
+
+**Installed Tools:**
+- `psql` - PostgreSQL interactive terminal (15.14)
+- `pg_dump` - PostgreSQL database backup utility
+- `pg_restore` - PostgreSQL database restoration utility
+- `pg_isready` - Check PostgreSQL server availability
+- `createdb` - Create a PostgreSQL database
+- `dropdb` - Remove a PostgreSQL database
+- `curl` - HTTP client
+- `wget` - File downloader
+
+**Usage:**
+```bash
+kubectl run postgresql-debug-15 --rm -it \
+  --image=ghcr.io/c-gerke/k8s-debug-pods/postgresql-debug-15:latest \
+  --restart=Never \
+  -- /bin/bash
+```
+
+Or apply the pod manifest directly:
+```bash
+kubectl apply -f pods/postgresql-debug-15.yml
+kubectl exec -it postgresql-debug-15-pod -- /bin/bash
+```
+
+Or using the deployment script:
+```bash
+./bin/deploy-debug-pod --auto postgresql-debug-15
+```
+
 ### ruby-debug
 
 Ruby development and debugging tools for working with Ruby applications. Available in multiple Ruby versions.
@@ -117,23 +226,6 @@ kubectl run ruby-debug-3.3 --rm -it \
 
 Or apply the pod manifest directly:
 ```bash
-kubectl apply -f pods/postgresql-debug.yml
-kubectl exec -it postgresql-debug-pod -- /bin/bash
-```
-
-Example connection to a PostgreSQL database:
-```bash
-# Inside the debug pod
-psql -h postgres-service.default.svc.cluster.local -U myuser -d mydb
-
-# Check if PostgreSQL is ready
-pg_isready -h postgres-service.default.svc.cluster.local -p 5432
-
-# Dump a database
-pg_dump -h postgres-service.default.svc.cluster.local -U myuser mydb > backup.sql
-
-# Restore a database
-pg_restore -h postgres-service.default.svc.cluster.local -U myuser -d mydb backup.sql
 kubectl apply -f pods/ruby-debug-3.3.yml
 kubectl exec -it ruby-debug-3.3-pod -- /bin/bash
 ```
@@ -229,14 +321,19 @@ See [bin/README.md](bin/README.md) for detailed usage and examples.
    - Clean up apt cache to minimize image size
    - Set appropriate CMD or ENTRYPOINT
 
-4. Commit and push the Dockerfile:
+4. Create a corresponding pod manifest in `pods/`:
    ```bash
-   git add images/my-new-debugger/Dockerfile
+   touch pods/my-new-debugger.yml
+   ```
+
+5. Commit and push the Dockerfile:
+   ```bash
+   git add images/my-new-debugger/Dockerfile pods/my-new-debugger.yml
    git commit -m "Add my-new-debugger image"
    git push
    ```
 
-5. GitHub Actions will automatically build and push the image to:
+6. GitHub Actions will automatically build and push the image to:
    ```
    ghcr.io/c-gerke/k8s-debug-pods/my-new-debugger:latest
    ```
