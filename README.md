@@ -61,7 +61,7 @@ Python debugging and development tools for running Python scripts and troublesho
 **Image:** `ghcr.io/c-gerke/k8s-debug-pods/python-debug:latest`
 
 **Installed Tools:**
-- `python3` (3.11.2) - Python interpreter
+- `python3` (3.11) - Python interpreter
 - `pip3` - Python package installer
 - `python3-venv` - Virtual environment support
 - `curl` - HTTP client
