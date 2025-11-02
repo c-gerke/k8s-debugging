@@ -79,10 +79,10 @@ PostgreSQL database debugging and development tools for database administration 
 
 **Image:** `ghcr.io/c-gerke/k8s-debug-pods/postgresql-debug-13:latest`
 
-**PostgreSQL Version:** 13.16
+**PostgreSQL Version:** 13 (latest patch version)
 
 **Installed Tools:**
-- `psql` - PostgreSQL interactive terminal (13.16)
+- `psql` - PostgreSQL interactive terminal (13.x)
 - `pg_dump` - PostgreSQL database backup utility
 - `pg_restore` - PostgreSQL database restoration utility
 - `pg_isready` - Check PostgreSQL server availability
@@ -129,10 +129,10 @@ pg_restore -h postgres-service.default.svc.cluster.local -U myuser -d mydb backu
 
 **Image:** `ghcr.io/c-gerke/k8s-debug-pods/postgresql-debug-14:latest`
 
-**PostgreSQL Version:** 14.13
+**PostgreSQL Version:** 14 (latest patch version)
 
 **Installed Tools:**
-- `psql` - PostgreSQL interactive terminal (14.13)
+- `psql` - PostgreSQL interactive terminal (14.x)
 - `pg_dump` - PostgreSQL database backup utility
 - `pg_restore` - PostgreSQL database restoration utility
 - `pg_isready` - Check PostgreSQL server availability
@@ -164,10 +164,10 @@ Or using the deployment script:
 
 **Image:** `ghcr.io/c-gerke/k8s-debug-pods/postgresql-debug-15:latest`
 
-**PostgreSQL Version:** 15.14
+**PostgreSQL Version:** 15 (latest patch version)
 
 **Installed Tools:**
-- `psql` - PostgreSQL interactive terminal (15.14)
+- `psql` - PostgreSQL interactive terminal (15.x)
 - `pg_dump` - PostgreSQL database backup utility
 - `pg_restore` - PostgreSQL database restoration utility
 - `pg_isready` - Check PostgreSQL server availability

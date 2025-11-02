@@ -11,7 +11,7 @@ RUN apt-get update && \
     curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-    postgresql-client-14=14.13-1.pgdg120+1 && \
+    postgresql-client-14 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* \
            /tmp/* \
