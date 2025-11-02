@@ -31,7 +31,6 @@ jobs:
         uses: tj-actions/changed-files@v45
         with:
           files: images/**/Dockerfile
-          json: true
 
       - name: Set matrix for builds
         id: set-matrix
@@ -41,7 +40,12 @@ jobs:
             images=$(find images -name Dockerfile -type f | sed 's|/Dockerfile||' | sed 's|images/||' | jq -R -s -c 'split("\n")[:-1]')
           else
             # Build only changed images
-            images=$(echo '${{ steps.changed-files.outputs.all_changed_files }}' | jq -c '[.[] | sub("images/"; "") | sub("/Dockerfile"; "")]')
+            changed_files="${{ steps.changed-files.outputs.all_changed_files }}"
+            if [ -z "$changed_files" ]; then
+              images="[]"
+            else
+              images=$(echo "$changed_files" | tr ' ' '\n' | sed 's|images/||' | sed 's|/Dockerfile||' | jq -R -s -c 'split("\n") | map(select(length > 0))')
+            fi
           fi
           
           if [ "$images" = "[]" ] || [ -z "$images" ]; then
