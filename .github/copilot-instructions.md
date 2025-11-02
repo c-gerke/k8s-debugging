@@ -2,7 +2,7 @@
 
 ## Repository Purpose
 
-This repository maintains purpose-built container images and Kubernetes pod manifests for debugging applications in Kubernetes clusters. Each image is optimized for size and focused on specific debugging tasks.
+This repository maintains purpose-built container images and Kubernetes pod manifests for debugging applications in Kubernetes clusters. Each image is optimized for size and focused on specific debugging tasks. Includes deployment scripts for easy pod creation with intelligent resource allocation.
 
 ## Architecture & Design Principles
 
@@ -76,15 +76,21 @@ mkdir -p images/new-debugger
 
 2. Add Dockerfile following best practices above
 
-3. Update README.md:
+3. Create pod manifest template in `pods/`:
+```bash
+cp pods/network-debug.yml pods/new-debugger.yml
+# Edit to customize image, volumes, env vars, etc.
+```
+
+4. Update README.md:
    - Add section under "Available Images"
    - Document installed tools
    - Provide usage example
    - Include image reference
 
-4. Optionally add pod manifest in `pods/`
-
 5. Commit and push - GitHub Actions handles the rest
+
+**Note**: Pod manifest filename should match the image name (e.g., `network-debug.yml` for `network-debug` image) so deployment scripts can find it automatically.
 
 ## Pod Manifests
 
@@ -116,16 +122,20 @@ spec:
         ephemeral-storage: "128Mi"
       limits:
         memory: "128Mi"
-        cpu: "500m"
         ephemeral-storage: "128Mi"
   restartPolicy: Never
 ```
 
-The deployment script uses `yq` to dynamically modify:
-- Pod name
-- Resource requests/limits (memory and ephemeral-storage)
+**Key points about pod manifests**:
+- CPU limits are omitted to allow burstable pods (only requests are set)
+- Memory and ephemeral-storage have both requests and limits
+- Default to 128Mi but deployment script can scale up to 1Gi based on namespace quotas
 
-All other configurations (volumes, commands, env vars, etc.) are preserved from the template.
+The deployment script uses `yq` to dynamically modify:
+- Pod name (based on --name flag or defaults to `<type>-debug-pod`)
+- Resource requests/limits (memory and ephemeral-storage only)
+
+All other configurations (volumes, commands, env vars, security context, etc.) are preserved from the template.
 
 ## Code Style & Documentation
 
@@ -168,13 +178,25 @@ Before completing any change:
 - One logical change per commit
 - Test builds locally before pushing when possible
 
-## Repository-Specific Commands
+## Deployment Scripts
 
-### Deployment Scripts
+### Overview
+The `bin/` directory contains helper scripts for deploying debug pods with intelligent resource allocation. These scripts use the pod manifests in `pods/` as templates and dynamically adjust resources based on namespace quotas.
+
+**Prerequisites**:
+- `kubectl` configured with cluster access
+- `yq` YAML processor (install: `brew install yq` on macOS)
+
+### deploy-debug-pod
+
+Deploys a debug pod using a template from `pods/<type>.yml`:
 
 ```bash
-# Deploy debug pod with auto-resource calculation
+# Deploy with context/namespace
 ./bin/deploy-debug-pod -c <context> -n <namespace> <pod-type>
+
+# Deploy to current context/namespace
+./bin/deploy-debug-pod <pod-type>
 
 # Deploy and exec in one command
 ./bin/deploy-debug-pod --auto <pod-type>
@@ -182,12 +204,42 @@ Before completing any change:
 # Override resources
 ./bin/deploy-debug-pod -m 512Mi -e 512Mi <pod-type>
 
+# Custom pod name
+./bin/deploy-debug-pod --name my-debug <pod-type>
+
 # List available pod types
 ./bin/deploy-debug-pod --list-images
-
-# Cleanup debug pods
-./bin/cleanup-debug-pods -n <namespace> --all
 ```
+
+**How it works**:
+1. Reads pod manifest template from `pods/<pod-type>.yml`
+2. Checks namespace ResourceQuota (if present)
+3. Calculates appropriate resources (128Mi default, up to 1Gi max)
+4. Uses `yq` to modify only pod name and resource values
+5. Applies modified manifest to cluster
+6. Preserves all other template configurations (volumes, env, etc.)
+
+### cleanup-debug-pods
+
+Manages cleanup of deployed debug pods:
+
+```bash
+# List debug pods in namespace
+./bin/cleanup-debug-pods -n <namespace>
+
+# Delete all debug pods (with confirmation)
+./bin/cleanup-debug-pods -n <namespace> --all
+
+# Delete specific pod
+./bin/cleanup-debug-pods --name network-debug-pod
+
+# Dry run
+./bin/cleanup-debug-pods -n <namespace> --all --dry-run
+```
+
+Targets pods with label `app=debug-pod` (automatically added by deployment script).
+
+## Repository-Specific Commands
 
 ### Local Development
 ```bash
@@ -280,6 +332,8 @@ Keep names:
 - **Base OS**: Debian Bookworm Slim
 - **Shell**: Bash (default CMD)
 - **Package manager**: apt-get
+- **Deployment tool**: yq (required for bin scripts)
+- **Pod resource defaults**: 128Mi memory/ephemeral, 100m CPU request (no CPU limit)
 
 ## Troubleshooting
 
@@ -298,6 +352,12 @@ Check if Dockerfile path matches `images/**/Dockerfile` pattern
 ### Build happens but image size is large
 Review cleanup steps in Dockerfile - ensure cache removal happens in same RUN layer
 
+### Deployment script fails with "yq: command not found"
+Install yq: `brew install yq` on macOS or download from https://github.com/mikefarah/yq/releases
+
+### Deployment script can't find pod manifest
+Ensure manifest filename matches pod type (e.g., `pods/network-debug.yml` for type `network-debug`)
+
 ## Future Expansion Ideas
 
 Consider adding specialized images for:
@@ -308,4 +368,19 @@ Consider adding specialized images for:
 - Performance profiling (perf, flamegraphs)
 
 Each should follow the same patterns established here.
+
+## Design Philosophy
+
+### Template-Based Deployment
+The repository uses a template-based approach where:
+- Pod manifests are the source of truth
+- Scripts modify only what's necessary (name, resources)
+- Complex configurations (volumes, init containers, etc.) stay in YAML
+- Easy to maintain and scale to many pod types
+
+This approach ensures:
+- **Maintainability**: Changes to pod structure happen in YAML, not bash
+- **Scalability**: Adding new pod types is just creating a new YAML file
+- **Flexibility**: Each pod type can have unique volumes, commands, security context
+- **Clarity**: Pod configuration is visible and version-controlled in YAML
 
