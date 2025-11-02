@@ -133,6 +133,30 @@ get_namespace_resource_info() {
     echo "$quota_memory|$quota_ephemeral"
 }
 
+calculate_stepped_allocation() {
+    local quota_bytes=$1
+    local max_bytes=$2
+    local default_bytes=$3
+    local step_size=67108864  # 64Mi in bytes
+    
+    # Use 80% of quota (leaving 20% buffer)
+    local usable_bytes=$((quota_bytes * 80 / 100))
+    
+    # Cap at max
+    if [ "$usable_bytes" -gt "$max_bytes" ]; then
+        usable_bytes=$max_bytes
+    fi
+    
+    # Start from default and step up by 64Mi increments
+    local allocated=$default_bytes
+    
+    while [ $((allocated + step_size)) -le "$usable_bytes" ]; do
+        allocated=$((allocated + step_size))
+    done
+    
+    echo "$allocated"
+}
+
 calculate_resources() {
     local memory_override=$1
     local ephemeral_override=$2
@@ -154,15 +178,11 @@ calculate_resources() {
         local max_bytes=$(convert_to_bytes "$MAX_MEMORY")
         local default_bytes=$(convert_to_bytes "$DEFAULT_MEMORY_REQUEST")
         
-        local available_bytes=$((quota_bytes / 4))
+        local allocated=$(calculate_stepped_allocation "$quota_bytes" "$max_bytes" "$default_bytes")
         
-        if [ -n "$available_bytes" ] && [ "$available_bytes" -gt "$max_bytes" ]; then
-            available_bytes=$max_bytes
-        fi
-        
-        if [ -n "$available_bytes" ] && [ "$available_bytes" -gt "$default_bytes" ]; then
-            memory_request=$(bytes_to_human "$available_bytes")
-            memory_limit=$(bytes_to_human "$available_bytes")
+        if [ -n "$allocated" ] && [ "$allocated" -gt "$default_bytes" ]; then
+            memory_request=$(bytes_to_human "$allocated")
+            memory_limit=$(bytes_to_human "$allocated")
         fi
     fi
     
@@ -174,15 +194,11 @@ calculate_resources() {
         local max_bytes=$(convert_to_bytes "$MAX_EPHEMERAL")
         local default_bytes=$(convert_to_bytes "$DEFAULT_EPHEMERAL_REQUEST")
         
-        local available_bytes=$((quota_bytes / 4))
+        local allocated=$(calculate_stepped_allocation "$quota_bytes" "$max_bytes" "$default_bytes")
         
-        if [ -n "$available_bytes" ] && [ "$available_bytes" -gt "$max_bytes" ]; then
-            available_bytes=$max_bytes
-        fi
-        
-        if [ -n "$available_bytes" ] && [ "$available_bytes" -gt "$default_bytes" ]; then
-            ephemeral_request=$(bytes_to_human "$available_bytes")
-            ephemeral_limit=$(bytes_to_human "$available_bytes")
+        if [ -n "$allocated" ] && [ "$allocated" -gt "$default_bytes" ]; then
+            ephemeral_request=$(bytes_to_human "$allocated")
+            ephemeral_limit=$(bytes_to_human "$allocated")
         fi
     fi
     

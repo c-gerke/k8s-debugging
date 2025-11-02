@@ -70,8 +70,18 @@ The deployment script intelligently calculates resource allocations:
 
 1. **Default**: Starts with 128Mi for memory and ephemeral storage
 2. **Namespace Aware**: Checks ResourceQuota if present
-3. **Scaling**: Can allocate up to 1Gi based on available quota
-4. **Override**: Manual overrides with `-m` and `-e` flags
+3. **Smart Stepping**: Steps up in 64Mi increments from the default
+4. **Conservative Buffer**: Uses only 80% of quota (leaves 20% for other pods)
+5. **Maximum Cap**: Never exceeds 1Gi even if quota allows more
+6. **Override**: Manual overrides with `-m` and `-e` flags
+
+**Example allocation with 2Gi namespace quota:**
+- Usable: 2Gi × 80% = 1.6Gi
+- Allocation: 128Mi → 192Mi → 256Mi → ... → 1024Mi (capped at 1Gi)
+
+**Example allocation with 500Mi namespace quota:**
+- Usable: 500Mi × 80% = 400Mi
+- Allocation: 128Mi → 192Mi → 256Mi → 320Mi → 384Mi (stops before exceeding)
 
 ### Template-Based
 

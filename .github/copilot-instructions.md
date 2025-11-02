@@ -130,6 +130,7 @@ spec:
 - CPU limits are omitted to allow burstable pods (only requests are set)
 - Memory and ephemeral-storage have both requests and limits
 - Default to 128Mi but deployment script can scale up to 1Gi based on namespace quotas
+- Script steps up in 64Mi increments and reserves 20% of quota for other pods
 
 The deployment script uses `yq` to dynamically modify:
 - Pod name (based on --name flag or defaults to `<type>-debug-pod`)
@@ -214,7 +215,11 @@ Deploys a debug pod using a template from `pods/<type>.yml`:
 **How it works**:
 1. Reads pod manifest template from `pods/<pod-type>.yml`
 2. Checks namespace ResourceQuota (if present)
-3. Calculates appropriate resources (128Mi default, up to 1Gi max)
+3. Calculates appropriate resources using smart allocation:
+   - Starts at 128Mi default
+   - Steps up in 64Mi increments
+   - Uses 80% of quota (20% buffer for other pods)
+   - Caps at 1Gi maximum
 4. Uses `yq` to modify only pod name and resource values
 5. Applies modified manifest to cluster
 6. Preserves all other template configurations (volumes, env, etc.)
@@ -334,6 +339,7 @@ Keep names:
 - **Package manager**: apt-get
 - **Deployment tool**: yq (required for bin scripts)
 - **Pod resource defaults**: 128Mi memory/ephemeral, 100m CPU request (no CPU limit)
+- **Resource stepping**: 64Mi increments with 20% quota buffer, 1Gi max
 
 ## Troubleshooting
 

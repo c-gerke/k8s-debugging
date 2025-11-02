@@ -75,7 +75,9 @@ For easier deployment with intelligent resource allocation, use the provided scr
 The deployment script:
 - Automatically calculates appropriate resource allocations based on namespace quotas
 - Uses pod manifests as templates (maintains volumes, commands, etc.)
-- Defaults to 128Mi, can scale up to 1Gi based on availability
+- Steps up in 64Mi increments from 128Mi default
+- Leaves 20% buffer for other pods in the namespace
+- Caps at 1Gi maximum regardless of quota
 - Supports manual resource overrides
 
 See [bin/README.md](bin/README.md) for detailed usage and examples.
