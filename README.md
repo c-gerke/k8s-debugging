@@ -7,10 +7,13 @@ A collection of purpose-built container images and Kubernetes manifests for debu
 ```
 k8s-debug-pods/
 ├── images/              # Container image definitions
-│   └── network-debug/   # Network debugging tools
+│   ├── network-debug/   # Network debugging tools
+│   │   └── Dockerfile
+│   └── golang-debug/    # Golang debugging tools
 │       └── Dockerfile
 ├── pods/                # Kubernetes pod manifests
-│   └── network-debug.yml
+│   ├── network-debug.yml
+│   └── golang-debug.yml
 ├── bin/                 # Deployment helper scripts
 │   ├── deploy-debug-pod
 │   └── cleanup-debug-pods
@@ -49,6 +52,34 @@ Or apply the pod manifest directly:
 ```bash
 kubectl apply -f pods/network-debug.yml
 kubectl exec -it network-debug-pod -- /bin/bash
+```
+
+### golang-debug
+
+Golang development and debugging tools for running and analyzing Go applications.
+
+**Image:** `ghcr.io/c-gerke/k8s-debug-pods/golang-debug:latest`
+
+**Installed Tools:**
+- `go` - Go compiler and toolchain (1.19.8)
+- `git` - Version control system
+- `gcc` / `g++` - C/C++ compilers for CGO support
+- `curl` - HTTP client
+- `wget` - File downloader
+- `build-essential` - Essential build tools
+
+**Usage:**
+```bash
+kubectl run golang-debug --rm -it \
+  --image=ghcr.io/c-gerke/k8s-debug-pods/golang-debug:latest \
+  --restart=Never \
+  -- /bin/bash
+```
+
+Or apply the pod manifest directly:
+```bash
+kubectl apply -f pods/golang-debug.yml
+kubectl exec -it golang-debug-pod -- /bin/bash
 ```
 
 ### Deployment Scripts
