@@ -40,6 +40,7 @@ OPTIONS:
     -e, --ephemeral     Override ephemeral storage (e.g., 256Mi, 1Gi)
     --name              Custom pod name (default: <image-type>-debug-pod)
     --auto              Automatically exec into pod after creation
+    --keep              Keep existing pod if found (skip recreation)
     --list-images       List available debug images
     -h, --help          Show this help message
 
@@ -211,6 +212,7 @@ MEMORY=""
 EPHEMERAL=""
 POD_NAME=""
 AUTO_EXEC=false
+KEEP_EXISTING=false
 IMAGE_TYPE=""
 
 while [[ $# -gt 0 ]]; do
@@ -237,6 +239,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --auto)
             AUTO_EXEC=true
+            shift
+            ;;
+        --keep)
+            KEEP_EXISTING=true
             shift
             ;;
         --list-images)
@@ -323,7 +329,33 @@ yq eval ".metadata.name = \"$POD_NAME\" |
          .spec.containers[0].resources.limits.\"ephemeral-storage\" = \"$EPHEMERAL_LIMIT\"" \
          "$MANIFEST_FILE" > "$TEMP_MANIFEST"
 
-kubectl --context="$CONTEXT" -n "$NAMESPACE" apply -f "$TEMP_MANIFEST"
+# Check if pod already exists and delete it (pods are immutable)
+if kubectl --context="$CONTEXT" -n "$NAMESPACE" get pod "$POD_NAME" &>/dev/null; then
+    if [ "$KEEP_EXISTING" = true ]; then
+        echo "Existing pod found. Keeping existing pod (--keep flag provided)."
+        echo ""
+        echo "Pod already exists!"
+        echo ""
+        echo "To exec into the pod:"
+        echo "  kubectl --context=$CONTEXT -n $NAMESPACE exec -it $POD_NAME -- /bin/bash"
+        echo ""
+        echo "To delete the pod:"
+        echo "  kubectl --context=$CONTEXT -n $NAMESPACE delete pod $POD_NAME"
+        echo ""
+        
+        if [ "$AUTO_EXEC" = true ]; then
+            echo "Executing into pod..."
+            kubectl --context="$CONTEXT" -n "$NAMESPACE" exec -it "$POD_NAME" -- /bin/bash
+        fi
+        exit 0
+    else
+        echo "Existing pod found. Deleting to apply changes..."
+        kubectl --context="$CONTEXT" -n "$NAMESPACE" delete pod "$POD_NAME" --wait=true --timeout=60s
+        echo ""
+    fi
+fi
+
+kubectl --context="$CONTEXT" -n "$NAMESPACE" create -f "$TEMP_MANIFEST"
 
 echo ""
 echo "Waiting for pod to be ready..."

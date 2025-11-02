@@ -222,8 +222,11 @@ Deploys a debug pod using a template from `pods/<type>.yml`:
    - Uses 80% of quota (20% buffer for other pods)
    - Caps at 1Gi maximum
 4. Uses `yq` to modify only pod name and resource values
-5. Applies modified manifest to cluster
-6. Preserves all other template configurations (volumes, env, etc.)
+5. Checks if pod already exists:
+   - If exists: deletes and recreates (pods are immutable)
+   - Use `--keep` flag to skip recreation
+6. Creates pod in cluster
+7. Preserves all other template configurations (volumes, env, etc.)
 
 ### cleanup-debug-pods
 
