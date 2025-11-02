@@ -56,8 +56,9 @@ Aim for:
 - **Authentication**: Uses built-in `GITHUB_TOKEN` for ghcr.io
 - **Manual trigger**: `gh workflow run build-images.yml` builds all images
 - **Tagging strategy**:
-  - Main branch: `latest`, `main`, `sha-<commit>`
-  - PRs: `pr-<number>`, `sha-<commit>`
+  - Main branch: `latest`, `main`, `sha-<full-commit-hash>`
+  - PRs: `pr-<number>`, `sha-<full-commit-hash>`
+  - Uses full 40-character commit SHA for precise tracking
 
 ### Renovate Configuration
 - **Pinning**: All dependencies use SHA digests for reproducibility

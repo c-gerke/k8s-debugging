@@ -119,9 +119,9 @@ See [bin/README.md](bin/README.md) for detailed usage and examples.
 When a Dockerfile is modified in the `images/` directory:
 1. GitHub Actions detects the change
 2. Builds the affected image(s) using Docker Buildx
-3. Tags with multiple formats (latest, branch name, git sha)
+3. Tags with multiple formats (latest, branch name, full git commit hash)
 4. Pushes to GitHub Container Registry (ghcr.io)
-5. Supports multi-architecture builds (amd64, arm64)
+5. Builds for linux/amd64 platform
 
 ### Dependency Updates
 
