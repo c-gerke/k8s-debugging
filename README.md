@@ -345,17 +345,35 @@ See [bin/README.md](bin/README.md) for detailed usage and examples.
 When a Dockerfile is modified in the `images/` directory:
 1. GitHub Actions detects the change
 2. Builds the affected image(s) using Docker Buildx
-3. Tags with multiple formats (latest, branch name, full git commit hash)
-4. Pushes to GitHub Container Registry (ghcr.io)
-5. Builds for linux/amd64 platform
+3. **Runs comprehensive tests** to verify all tools work correctly
+4. Tags with multiple formats (latest, branch name, full git commit hash)
+5. Pushes to GitHub Container Registry (ghcr.io) only if tests pass
+6. Builds for linux/amd64 platform
+
+### Automated Testing
+
+Every image is tested before being pushed to ensure quality:
+
+- **Common tests:** Verify bash and basic functionality
+- **Tool-specific tests:** Validate all documented tools work correctly
+- **Version verification:** Ensure correct versions are installed (e.g., PostgreSQL 15.x, Ruby 3.4.x)
+- **Fail-fast:** Build fails immediately if any test fails
+
+Example tests for postgresql-debug-15:
+- PostgreSQL 15.x version verification
+- psql, pg_dump, pg_restore, pg_isready functionality
+- curl and wget availability
+
+This testing framework enables safe auto-merging of dependency updates. See [.github/TESTING.md](.github/TESTING.md) for details.
 
 ### Dependency Updates
 
 Renovate automatically:
 - Monitors base images in all Dockerfiles
 - Creates PRs for updates
-- Auto-merges minor and patch version updates
+- **Auto-merges minor and patch version updates** (after tests pass)
 - Requires manual approval for major version updates
+- Tests ensure no breaking changes reach production
 
 ## Requirements
 
