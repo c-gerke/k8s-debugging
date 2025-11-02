@@ -6,39 +6,63 @@
   "pinDigests": true,
   "packageRules": [
     {
-      "matchDatasources": ["docker"],
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchCategories": [
+        "docker"
+      ],
+      "enabled": true,
+      "managerFilePatterns": [
+        "/^images/.+/Dockerfile$/"
+      ]
+    },
+    {
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "squash"
     },
     {
-      "matchDatasources": ["docker"],
-      "matchUpdateTypes": ["major"],
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
       "automerge": false
     },
     {
-      "matchManagers": ["github-actions"],
+      "matchManagers": [
+        "github-actions"
+      ],
       "groupName": "GitHub Actions",
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "squash"
     },
     {
-      "matchManagers": ["github-actions"],
-      "matchUpdateTypes": ["major"],
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
       "automerge": false
     }
   ],
-  "docker": {
-    "enabled": true,
-    "fileMatch": ["^images/.+/Dockerfile$"]
-  },
-  "labels": ["dependencies"],
+  "labels": [
+    "dependencies"
+  ],
   "commitMessagePrefix": "chore:",
   "prConcurrentLimit": 5,
   "prHourlyLimit": 0,
   "timezone": "America/Los_Angeles"
 }
-
