@@ -89,12 +89,13 @@ Once inside the pod, you can run Python tools:
 # Run Python scripts
 python3 script.py
 
-# Install additional packages
-pip3 install requests
-
-# Create and use virtual environments
+# Install packages using venv (recommended)
 python3 -m venv myenv
 source myenv/bin/activate
+pip3 install requests
+
+# Or install system-wide (requires --break-system-packages flag)
+pip3 install --break-system-packages requests
 
 # Run interactive Python
 python3
