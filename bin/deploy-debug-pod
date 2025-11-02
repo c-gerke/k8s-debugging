@@ -82,7 +82,10 @@ convert_to_bytes() {
     local number="${value//[^0-9]/}"
     local unit="${value//[0-9]/}"
     
-    case "${unit^^}" in
+    # Convert to uppercase using tr for compatibility
+    unit=$(echo "$unit" | tr '[:lower:]' '[:upper:]')
+    
+    case "$unit" in
         K|KI)
             echo $((number * 1024))
             ;;
@@ -153,11 +156,11 @@ calculate_resources() {
         
         local available_bytes=$((quota_bytes / 4))
         
-        if [ "$available_bytes" -gt "$max_bytes" ]; then
+        if [ -n "$available_bytes" ] && [ "$available_bytes" -gt "$max_bytes" ]; then
             available_bytes=$max_bytes
         fi
         
-        if [ "$available_bytes" -gt "$default_bytes" ]; then
+        if [ -n "$available_bytes" ] && [ "$available_bytes" -gt "$default_bytes" ]; then
             memory_request=$(bytes_to_human "$available_bytes")
             memory_limit=$(bytes_to_human "$available_bytes")
         fi
@@ -173,11 +176,11 @@ calculate_resources() {
         
         local available_bytes=$((quota_bytes / 4))
         
-        if [ "$available_bytes" -gt "$max_bytes" ]; then
+        if [ -n "$available_bytes" ] && [ "$available_bytes" -gt "$max_bytes" ]; then
             available_bytes=$max_bytes
         fi
         
-        if [ "$available_bytes" -gt "$default_bytes" ]; then
+        if [ -n "$available_bytes" ] && [ "$available_bytes" -gt "$default_bytes" ]; then
             ephemeral_request=$(bytes_to_human "$available_bytes")
             ephemeral_limit=$(bytes_to_human "$available_bytes")
         fi
@@ -255,7 +258,13 @@ if [ -z "$NAMESPACE" ]; then
 fi
 
 if [ -z "$POD_NAME" ]; then
-    POD_NAME="${IMAGE_TYPE}-debug-pod"
+    # Remove -debug suffix if already present to avoid double-debug in name
+    POD_NAME="${IMAGE_TYPE}"
+    if [[ ! "$POD_NAME" =~ -debug$ ]]; then
+        POD_NAME="${POD_NAME}-debug-pod"
+    else
+        POD_NAME="${POD_NAME}-pod"
+    fi
 fi
 
 check_dependencies
