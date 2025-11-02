@@ -161,7 +161,6 @@ jobs:
               echo "✓ psql works: $PG_VERSION"
               
               # Verify correct major version
-              EXPECTED_VERSION="${{ matrix.image }}" | grep -oE '[0-9]+$'
               if [[ "${{ matrix.image }}" == "postgresql-debug-13" ]]; then
                 echo "$PG_VERSION" | grep -q "13\." || (echo "❌ Expected PostgreSQL 13.x" && exit 1)
                 echo "✓ PostgreSQL 13.x version verified"
