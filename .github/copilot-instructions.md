@@ -92,8 +92,8 @@ pg_isready, createdb, dropdb, curl, wget
 ruby --version (verify 3.3.x/3.4.x), irb, gem, bundle,
 git, curl, wget, vim, gcc (for native gems)
 
-# mysql-debug-5.7/8.0/8.4: Test MySQL tools + version verification
-mysql --version (verify 5.7.x/8.0.x/8.4.x), mysqldump,
+# mysql-debug-8.0/8.4: Test MySQL tools + version verification
+mysql --version (verify 8.0.x/8.4.x), mysqldump,
 mysqlshow, mysqladmin, curl, wget
 ```
 

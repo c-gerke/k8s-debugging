@@ -61,7 +61,7 @@ Tests Ruby development tools and verifies correct version:
 
 **Version Verification:** Tests ensure the correct major.minor version is installed (e.g., ruby-debug-3.4 must have Ruby 3.4.x)
 
-### mysql-debug-5.7, mysql-debug-8.0, mysql-debug-8.4
+### mysql-debug-8.0, mysql-debug-8.4
 
 Tests MySQL client tools and verifies correct version:
 

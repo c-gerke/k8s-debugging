@@ -7,8 +7,6 @@ A collection of purpose-built container images and Kubernetes manifests for debu
 ```
 k8s-debug-pods/
 ├── images/                     # Container image definitions
-│   ├── mysql-debug-5.7/        # MySQL 5.7 client tools
-│   │   └── Dockerfile
 │   ├── mysql-debug-8.0/        # MySQL 8.0 client tools
 │   │   └── Dockerfile
 │   ├── mysql-debug-8.4/        # MySQL 8.4 client tools
@@ -26,7 +24,6 @@ k8s-debug-pods/
 │   └── ruby-debug-3.4/         # Ruby 3.4.x development tools
 │       └── Dockerfile
 ├── pods/                       # Kubernetes pod manifests
-│   ├── mysql-debug-5.7.yml
 │   ├── mysql-debug-8.0.yml
 │   ├── mysql-debug-8.4.yml
 │   ├── network-debug.yml
@@ -86,51 +83,6 @@ MySQL database client tools for debugging and troubleshooting MySQL databases. T
 
 **Note:** These images are based on official MySQL Docker images and provide the exact MySQL client version specified.
 
-#### mysql-debug-5.7
-
-**Image:** `ghcr.io/c-gerke/k8s-debug-pods/mysql-debug-5.7:latest`
-
-**Client:** MySQL 5.7.44
-
-**Installed Tools:**
-- `mysql` - MySQL client (5.7.44)
-- `mysqldump` - Database backup utility
-- `mysqlshow` - Database/table browser
-- `mysqladmin` - Server administration utility
-- `curl` - HTTP client
-- `wget` - File downloader
-
-**Usage:**
-```bash
-kubectl run mysql-debug-5.7 --rm -it \
-  --image=ghcr.io/c-gerke/k8s-debug-pods/mysql-debug-5.7:latest \
-  --restart=Never \
-  -- /bin/bash
-```
-
-Or apply the pod manifest directly:
-```bash
-kubectl apply -f pods/mysql-debug-5.7.yml
-kubectl exec -it mysql-debug-5.7-pod -- /bin/bash
-```
-
-Or using the deployment script:
-```bash
-./bin/deploy-debug-pod --auto mysql-debug-5.7
-```
-
-Example connection to a MySQL database:
-```bash
-# Inside the debug pod
-mysql -h mysql-service.default.svc.cluster.local -u root -p
-
-# Dump a database
-mysqldump -h mysql-service.default.svc.cluster.local -u root -p mydb > backup.sql
-
-# Show databases
-mysqlshow -h mysql-service.default.svc.cluster.local -u root -p
-```
-
 #### mysql-debug-8.0
 
 **Image:** `ghcr.io/c-gerke/k8s-debug-pods/mysql-debug-8.0:latest`
@@ -162,6 +114,18 @@ kubectl exec -it mysql-debug-8.0-pod -- /bin/bash
 Or using the deployment script:
 ```bash
 ./bin/deploy-debug-pod --auto mysql-debug-8.0
+```
+
+Example connection to a MySQL database:
+```bash
+# Inside the debug pod
+mysql -h mysql-service.default.svc.cluster.local -u root -p
+
+# Dump a database
+mysqldump -h mysql-service.default.svc.cluster.local -u root -p mydb > backup.sql
+
+# Show databases
+mysqlshow -h mysql-service.default.svc.cluster.local -u root -p
 ```
 
 #### mysql-debug-8.4
