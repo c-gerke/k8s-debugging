@@ -1,4 +1,4 @@
-FROM mysql:8.0.44-debian@sha256:3cf32a3eb8fb10131ba35ffdd1d88aab0af2bf166b1cdd9d806b1272f323a8c3
+FROM mysql:8.0.44-debian@sha256:63f7c74cbd19d5ac0c7c7b0208e6ac6d5e3f46427672556779d1d7e45d8127e7
 
 RUN rm -f /etc/apt/sources.list.d/mysql.list && \
     apt-get update && \
