@@ -12,6 +12,7 @@ DEFAULT_EPHEMERAL_REQUEST="128Mi"
 DEFAULT_EPHEMERAL_LIMIT="128Mi"
 MAX_MEMORY="1Gi"
 MAX_EPHEMERAL="1Gi"
+DEFAULT_TTL="7200"
 
 check_dependencies() {
     if ! command -v yq &> /dev/null; then
@@ -39,6 +40,7 @@ OPTIONS:
     -m, --memory        Override memory request/limit (e.g., 256Mi, 1Gi)
     -e, --ephemeral     Override ephemeral storage (e.g., 256Mi, 1Gi)
     --name              Custom pod name (default: <image-type>-debug-pod)
+    --ttl               Time-to-live in seconds (default: 7200 = 2 hours, 0 = no limit)
     --auto              Automatically exec into pod after creation
     --force             Force recreation of existing pod
     --list-images       List available debug images
@@ -56,6 +58,12 @@ EXAMPLES:
 
     # Override memory allocation
     $(basename "$0") -m 512Mi ruby/3.4
+
+    # Deploy with 4 hour TTL
+    $(basename "$0") --ttl 14400 network/debug
+
+    # Deploy with no TTL (unlimited lifetime)
+    $(basename "$0") --ttl 0 mysql/8.0
 
     # List available images
     $(basename "$0") --list-images
@@ -212,6 +220,7 @@ NAMESPACE=""
 MEMORY=""
 EPHEMERAL=""
 POD_NAME=""
+TTL=""
 AUTO_EXEC=false
 FORCE_RECREATE=false
 IMAGE_TYPE=""
@@ -236,6 +245,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --name)
             POD_NAME="$2"
+            shift 2
+            ;;
+        --ttl)
+            TTL="$2"
             shift 2
             ;;
         --auto)
@@ -317,20 +330,39 @@ MEMORY_LIMIT=$(echo "$RESOURCE_INFO" | cut -d'|' -f2)
 EPHEMERAL_REQUEST=$(echo "$RESOURCE_INFO" | cut -d'|' -f3)
 EPHEMERAL_LIMIT=$(echo "$RESOURCE_INFO" | cut -d'|' -f4)
 
+if [ -z "$TTL" ]; then
+    TTL="$DEFAULT_TTL"
+fi
+
 echo "Calculated resources:"
 echo "  Memory:            $MEMORY_REQUEST (request) / $MEMORY_LIMIT (limit)"
 echo "  Ephemeral Storage: $EPHEMERAL_REQUEST (request) / $EPHEMERAL_LIMIT (limit)"
+if [ "$TTL" = "0" ]; then
+    echo "  TTL:               Unlimited (no auto-cleanup)"
+else
+    echo "  TTL:               ${TTL}s ($((TTL / 3600))h $((TTL % 3600 / 60))m)"
+fi
 echo ""
 
 TEMP_MANIFEST=$(mktemp)
 trap "rm -f $TEMP_MANIFEST" EXIT
 
-yq eval ".metadata.name = \"$POD_NAME\" | 
-         .spec.containers[0].resources.requests.memory = \"$MEMORY_REQUEST\" | 
-         .spec.containers[0].resources.limits.memory = \"$MEMORY_LIMIT\" |
-         .spec.containers[0].resources.requests.\"ephemeral-storage\" = \"$EPHEMERAL_REQUEST\" |
-         .spec.containers[0].resources.limits.\"ephemeral-storage\" = \"$EPHEMERAL_LIMIT\"" \
-         "$MANIFEST_FILE" > "$TEMP_MANIFEST"
+if [ "$TTL" = "0" ]; then
+    yq eval ".metadata.name = \"$POD_NAME\" | 
+             .spec.containers[0].resources.requests.memory = \"$MEMORY_REQUEST\" | 
+             .spec.containers[0].resources.limits.memory = \"$MEMORY_LIMIT\" |
+             .spec.containers[0].resources.requests.\"ephemeral-storage\" = \"$EPHEMERAL_REQUEST\" |
+             .spec.containers[0].resources.limits.\"ephemeral-storage\" = \"$EPHEMERAL_LIMIT\"" \
+             "$MANIFEST_FILE" > "$TEMP_MANIFEST"
+else
+    yq eval ".metadata.name = \"$POD_NAME\" | 
+             .spec.activeDeadlineSeconds = $TTL |
+             .spec.containers[0].resources.requests.memory = \"$MEMORY_REQUEST\" | 
+             .spec.containers[0].resources.limits.memory = \"$MEMORY_LIMIT\" |
+             .spec.containers[0].resources.requests.\"ephemeral-storage\" = \"$EPHEMERAL_REQUEST\" |
+             .spec.containers[0].resources.limits.\"ephemeral-storage\" = \"$EPHEMERAL_LIMIT\"" \
+             "$MANIFEST_FILE" > "$TEMP_MANIFEST"
+fi
 
 # Check if pod already exists
 if kubectl --context="$CONTEXT" -n "$NAMESPACE" get pod "$POD_NAME" &>/dev/null; then

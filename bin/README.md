@@ -33,6 +33,15 @@ Deploy a debug pod with intelligent resource allocation based on namespace quota
 ./bin/deploy-debug-pod -m 512Mi -e 512Mi ruby/3.4
 ```
 
+**Custom TTL (Time-to-Live):**
+```bash
+# Deploy with 4 hour TTL
+./bin/deploy-debug-pod --ttl 14400 network/debug
+
+# Deploy with no TTL (unlimited lifetime)
+./bin/deploy-debug-pod --ttl 0 mysql/8.0
+```
+
 **Force Recreation of Existing Pod:**
 ```bash
 ./bin/deploy-debug-pod --force network/debug
@@ -105,6 +114,34 @@ The script uses YAML manifests in `pods/` directory as templates:
 - Easy to add new pod types - just create a new YAML file in the appropriate category folder
 - **Safe by default:** Won't recreate existing pods unless `--force` is used
 - Use `--auto` to exec into existing pod or create if missing
+
+### Automatic Cleanup
+
+Debug pods automatically clean themselves up using Kubernetes' native `activeDeadlineSeconds`:
+
+- **Default TTL**: 2 hours (7200 seconds)
+- **Configurable**: Use `--ttl` flag to set custom lifetime in seconds
+- **Automatic Termination**: Kubernetes terminates pods when TTL expires
+- **Resource Protection**: Prevents forgotten debug pods from consuming cluster resources
+- **Native Feature**: No CronJob or external cleanup required
+- **Disable TTL**: Use `--ttl 0` for unlimited lifetime
+
+When a pod reaches its deadline, Kubernetes marks it as `Failed` and it will be garbage collected.
+
+**Examples:**
+```bash
+# Default 2-hour TTL
+./bin/deploy-debug-pod network/debug
+
+# 1-hour TTL (3600 seconds)
+./bin/deploy-debug-pod --ttl 3600 mysql/8.0
+
+# 8-hour TTL for long debugging sessions
+./bin/deploy-debug-pod --ttl 28800 postgresql/15
+
+# No TTL - pod runs until manually deleted
+./bin/deploy-debug-pod --ttl 0 ruby/3.4
+```
 
 ## Adding New Pod Types
 
