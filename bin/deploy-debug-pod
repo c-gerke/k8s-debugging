@@ -6,12 +6,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
 PODS_DIR="$REPO_DIR/pods"
 
-DEFAULT_MEMORY_REQUEST="128Mi"
-DEFAULT_MEMORY_LIMIT="128Mi"
-DEFAULT_EPHEMERAL_REQUEST="128Mi"
-DEFAULT_EPHEMERAL_LIMIT="128Mi"
-MAX_MEMORY="1Gi"
-MAX_EPHEMERAL="1Gi"
+MAX_MEMORY="512Mi"
+MAX_EPHEMERAL="512Mi"
 DEFAULT_TTL="7200"
 
 check_dependencies() {
@@ -167,18 +163,35 @@ calculate_stepped_allocation() {
     echo "$allocated"
 }
 
+get_manifest_resources() {
+    local manifest_file=$1
+    
+    local memory_request=$(yq eval '.spec.containers[0].resources.requests.memory // "128Mi"' "$manifest_file")
+    local memory_limit=$(yq eval '.spec.containers[0].resources.limits.memory // "128Mi"' "$manifest_file")
+    local ephemeral_request=$(yq eval '.spec.containers[0].resources.requests."ephemeral-storage" // "128Mi"' "$manifest_file")
+    local ephemeral_limit=$(yq eval '.spec.containers[0].resources.limits."ephemeral-storage" // "128Mi"' "$manifest_file")
+    
+    echo "$memory_request|$memory_limit|$ephemeral_request|$ephemeral_limit"
+}
+
 calculate_resources() {
     local memory_override=$1
     local ephemeral_override=$2
     local quota_info=$3
+    local manifest_resources=$4
     
     local quota_memory=$(echo "$quota_info" | cut -d'|' -f1)
     local quota_ephemeral=$(echo "$quota_info" | cut -d'|' -f2)
     
-    local memory_request="$DEFAULT_MEMORY_REQUEST"
-    local memory_limit="$DEFAULT_MEMORY_LIMIT"
-    local ephemeral_request="$DEFAULT_EPHEMERAL_REQUEST"
-    local ephemeral_limit="$DEFAULT_EPHEMERAL_LIMIT"
+    local manifest_memory_request=$(echo "$manifest_resources" | cut -d'|' -f1)
+    local manifest_memory_limit=$(echo "$manifest_resources" | cut -d'|' -f2)
+    local manifest_ephemeral_request=$(echo "$manifest_resources" | cut -d'|' -f3)
+    local manifest_ephemeral_limit=$(echo "$manifest_resources" | cut -d'|' -f4)
+    
+    local memory_request="$manifest_memory_request"
+    local memory_limit="$manifest_memory_limit"
+    local ephemeral_request="$manifest_ephemeral_request"
+    local ephemeral_limit="$manifest_ephemeral_limit"
     
     if [ -n "$memory_override" ]; then
         memory_request="$memory_override"
@@ -186,11 +199,11 @@ calculate_resources() {
     elif [ -n "$quota_memory" ]; then
         local quota_bytes=$(convert_to_bytes "$quota_memory")
         local max_bytes=$(convert_to_bytes "$MAX_MEMORY")
-        local default_bytes=$(convert_to_bytes "$DEFAULT_MEMORY_REQUEST")
+        local manifest_bytes=$(convert_to_bytes "$manifest_memory_request")
         
-        local allocated=$(calculate_stepped_allocation "$quota_bytes" "$max_bytes" "$default_bytes")
+        local allocated=$(calculate_stepped_allocation "$quota_bytes" "$max_bytes" "$manifest_bytes")
         
-        if [ -n "$allocated" ] && [ "$allocated" -gt "$default_bytes" ]; then
+        if [ -n "$allocated" ] && [ "$allocated" -gt "$manifest_bytes" ]; then
             memory_request=$(bytes_to_human "$allocated")
             memory_limit=$(bytes_to_human "$allocated")
         fi
@@ -202,11 +215,11 @@ calculate_resources() {
     elif [ -n "$quota_ephemeral" ]; then
         local quota_bytes=$(convert_to_bytes "$quota_ephemeral")
         local max_bytes=$(convert_to_bytes "$MAX_EPHEMERAL")
-        local default_bytes=$(convert_to_bytes "$DEFAULT_EPHEMERAL_REQUEST")
+        local manifest_bytes=$(convert_to_bytes "$manifest_ephemeral_request")
         
-        local allocated=$(calculate_stepped_allocation "$quota_bytes" "$max_bytes" "$default_bytes")
+        local allocated=$(calculate_stepped_allocation "$quota_bytes" "$max_bytes" "$manifest_bytes")
         
-        if [ -n "$allocated" ] && [ "$allocated" -gt "$default_bytes" ]; then
+        if [ -n "$allocated" ] && [ "$allocated" -gt "$manifest_bytes" ]; then
             ephemeral_request=$(bytes_to_human "$allocated")
             ephemeral_limit=$(bytes_to_human "$allocated")
         fi
@@ -322,8 +335,9 @@ echo "  Namespace: $NAMESPACE"
 echo "  Pod Name:  $POD_NAME"
 echo ""
 
+MANIFEST_RESOURCES=$(get_manifest_resources "$MANIFEST_FILE")
 QUOTA_INFO=$(get_namespace_resource_info "$CONTEXT" "$NAMESPACE")
-RESOURCE_INFO=$(calculate_resources "$MEMORY" "$EPHEMERAL" "$QUOTA_INFO")
+RESOURCE_INFO=$(calculate_resources "$MEMORY" "$EPHEMERAL" "$QUOTA_INFO" "$MANIFEST_RESOURCES")
 
 MEMORY_REQUEST=$(echo "$RESOURCE_INFO" | cut -d'|' -f1)
 MEMORY_LIMIT=$(echo "$RESOURCE_INFO" | cut -d'|' -f2)

@@ -89,19 +89,27 @@ Clean up debug pods from a namespace.
 
 The deployment script intelligently calculates resource allocations:
 
-1. **Default**: Starts with 128Mi for memory and ephemeral storage
+1. **Manifest Minimum**: Reads minimum resource requirements from each pod's manifest file
 2. **Namespace Aware**: Checks ResourceQuota if present
-3. **Smart Stepping**: Steps up in 64Mi increments from the default
+3. **Smart Stepping**: Steps up in 64Mi increments from the manifest minimum
 4. **Conservative Buffer**: Uses only 80% of quota (leaves 20% for other pods)
-5. **Maximum Cap**: Never exceeds 1Gi even if quota allows more
+5. **Maximum Cap**: Never exceeds 512Mi even if quota allows more
 6. **Override**: Manual overrides with `-m` and `-e` flags
 
-**Example allocation with 2Gi namespace quota:**
-- Usable: 2Gi × 80% = 1.6Gi
-- Allocation: 128Mi → 192Mi → 256Mi → ... → 1024Mi (capped at 1Gi)
+Each pod type defines its own minimum resources in its manifest:
+- `network/debug`: 32Mi (lightweight debugging)
+- `mysql/8.0`: 128Mi (database tools)
+- `postgresql/15`: 128Mi (database tools)
+- `ruby/3.4`: 128Mi (Rails debugging)
 
-**Example allocation with 500Mi namespace quota:**
-- Usable: 500Mi × 80% = 400Mi
+**Example allocation with network/debug (32Mi minimum) and 2Gi namespace quota:**
+- Manifest minimum: 32Mi
+- Usable quota: 2Gi × 80% = 1.6Gi
+- Allocation: 32Mi → 96Mi → 160Mi → ... → 512Mi (capped at max)
+
+**Example allocation with mysql/8.0 (128Mi minimum) and 500Mi namespace quota:**
+- Manifest minimum: 128Mi
+- Usable quota: 500Mi × 80% = 400Mi
 - Allocation: 128Mi → 192Mi → 256Mi → 320Mi → 384Mi (stops before exceeding)
 
 ### Template-Based
